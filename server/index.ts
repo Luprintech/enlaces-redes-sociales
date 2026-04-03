@@ -296,7 +296,7 @@ app.get('/out/:id', (req, res) => {
 
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
-  app.get('*', (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/') || req.path.startsWith('/out/')) {
       next();
       return;
