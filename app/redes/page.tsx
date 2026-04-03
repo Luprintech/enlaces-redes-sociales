@@ -1,5 +1,7 @@
+import { auth } from '@/lib/auth';
+import LoginForm from './LoginForm';
+import CmsPanel from './CmsPanel';
 import { getDb } from '@/lib/db';
-import LandingClient from '@/components/LandingClient';
 
 interface Profile {
   id: number;
@@ -51,20 +53,18 @@ interface LinkItem {
 
 export const dynamic = 'force-dynamic';
 
-function isScheduledActive(link: LinkItem) {
-  const now = Date.now();
-  const startOk = !link.start_at || Number.isNaN(Date.parse(link.start_at)) || Date.parse(link.start_at) <= now;
-  const endOk = !link.end_at || Number.isNaN(Date.parse(link.end_at)) || Date.parse(link.end_at) >= now;
-  return startOk && endOk;
-}
+export default async function RedesPage() {
+  const session = await auth();
 
-export default function HomePage() {
+  if (!session) {
+    return <LoginForm />;
+  }
+
   const db = getDb();
   const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get() as Profile;
-  const allLinks = db.prepare('SELECT * FROM links WHERE is_active = 1 ORDER BY sort_order ASC, id ASC').all() as LinkItem[];
-  const visibleLinks = allLinks.filter(isScheduledActive);
-  const socials = visibleLinks.filter((link) => link.type === 'social');
-  const links = visibleLinks.filter((link) => link.type === 'link');
+  const links = db
+    .prepare('SELECT * FROM links ORDER BY sort_order ASC, id ASC')
+    .all() as LinkItem[];
 
-  return <LandingClient profile={profile} socials={socials} links={links} />;
+  return <CmsPanel profile={profile} links={links} />;
 }

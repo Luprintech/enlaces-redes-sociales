@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Enlaces Redes Sociales
 
-## Getting Started
+Landing page tipo Linktree para redes sociales con mini CMS privado en `/redes`.
 
-First, run the development server:
+Incluye:
+
+- landing publica con tema claro/oscuro
+- links sociales + links de contenido
+- CMS para editar perfil, links, estilos, fondos y presets
+- autenticacion admin con cambio de contraseña
+- tracking de clicks
+- uploads locales
+- SQLite persistente
+- despliegue listo para Docker y Synology
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- NextAuth v5 beta
+- better-sqlite3
+- Tailwind CSS 4
+
+## Desarrollo local
+
+1. Instalá dependencias:
+
+```bash
+npm install
+```
+
+2. Creá tu archivo `.env.local` a partir de `.env.example`.
+
+3. Ejecutá el proyecto:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Abrí:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- landing: `http://localhost:3000`
+- panel: `http://localhost:3000/redes`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Variables de entorno
 
-## Learn More
+Usá `.env.example` para desarrollo local y `.env.docker.example` para despliegue Docker.
 
-To learn more about Next.js, take a look at the following resources:
+Variables principales:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `AUTH_TRUST_HOST`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Importante:
 
-## Deploy on Vercel
+- `ADMIN_USERNAME` y `ADMIN_PASSWORD` se usan para crear el admin inicial si la tabla `users` está vacía.
+- después podés cambiar la contraseña desde el CMS.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev
+npm run build
+npm run start
+npm run test
+npm run backup
+```
+
+## Estructura importante
+
+```text
+app/
+  page.tsx
+  redes/
+  api/
+  out/[id]/route.ts
+components/
+lib/
+scripts/
+tests/
+docker-compose.yml
+Dockerfile
+DEPLOY-SYNOLOGY.md
+```
+
+## Producción
+
+El proyecto ya está preparado para:
+
+- Docker multi-stage
+- salida `standalone` de Next.js
+- persistencia de SQLite y uploads
+- backup manual
+- despliegue detrás de reverse proxy
+
+Para Synology, seguí:
+
+- `DEPLOY-SYNOLOGY.md`
+
+## Seguridad ya incluida
+
+- rate limiting en login y cambio de contraseña
+- validación de URLs
+- validación de uploads por tamaño y firma real de archivo
+- tests mínimos de utilidades críticas
+
+## Backup
+
+```bash
+npm run backup
+```
+
+En Docker/Synology, los backups quedan persistidos en el volumen montado para `/app/backups`.
+
+## Notas
+
+- la ruta del panel no se muestra en la landing pública
+- los datos quedan en `data/app.db`
+- las imágenes subidas quedan en `public/uploads`

@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-sans: var(--font-inter);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Dark theme (default) ─────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg-page:        #0D0D1F;
+  --bg-card:        #1A1040;
+  --text-primary:   #ffffff;
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-muted:     rgba(255,255,255,0.2);
+  --border-subtle:  rgba(255,255,255,0.08);
+  --border-hover:   rgba(255,255,255,0.2);
+  --divider:        rgba(255,255,255,0.08);
+  --icon-default:   rgba(255,255,255,0.07);
+  --icon-border:    rgba(255,255,255,0.15);
+  --icon-color:     rgba(255,255,255,0.7);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Light theme ──────────────────────────────────── */
+[data-theme="light"] {
+  --bg-page:        #F0EEF8;
+  --bg-card:        #FFFFFF;
+  --text-primary:   #1a0a2e;
+  --text-secondary: rgba(26,10,46,0.6);
+  --text-muted:     rgba(26,10,46,0.3);
+  --border-subtle:  rgba(26,10,46,0.08);
+  --border-hover:   rgba(26,10,46,0.2);
+  --divider:        rgba(26,10,46,0.08);
+  --icon-default:   rgba(26,10,46,0.06);
+  --icon-border:    rgba(26,10,46,0.15);
+  --icon-color:     rgba(26,10,46,0.65);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(236,72,153,0.3);
+  border-radius: 3px;
 }

@@ -1,0 +1,26 @@
+services:
+  luprintech-rrss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: luprintech-rrss:latest
+    container_name: luprintech-rrss
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    volumes:
+      - ./docker-data/data:/app/data
+      - ./docker-data/uploads:/app/public/uploads
+      - ./docker-data/backups:/app/backups
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
