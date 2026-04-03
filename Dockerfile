@@ -17,7 +17,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
 
 COPY --from=builder /app/.next/standalone ./
@@ -27,6 +27,6 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
-EXPOSE 3000
+EXPOSE 4000
 
 CMD ["sh", "./docker-entrypoint.sh"]

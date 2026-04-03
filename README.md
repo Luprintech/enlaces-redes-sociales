@@ -122,6 +122,12 @@ Luego levantá el proyecto con:
 docker compose up -d --build
 ```
 
+El contenedor expone el puerto `4000`, así que en tu proxy tenés que apuntar a:
+
+```text
+http://<IP_DEL_SERVIDOR>:4000
+```
+
 ## Seguridad ya incluida
 
 - rate limiting en login y cambio de contraseña
