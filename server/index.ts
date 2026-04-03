@@ -5,7 +5,6 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { randomBytes } from 'crypto';
-import { fileURLToPath } from 'url';
 import { getDb } from '../lib/db.js';
 import {
   getClientIp,
@@ -15,9 +14,7 @@ import {
   validateImageUpload,
 } from '../lib/security.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = process.cwd();
 const publicDir = path.join(rootDir, 'public');
 const uploadsDir = path.join(publicDir, 'uploads');
 const distDir = path.join(rootDir, 'dist');
