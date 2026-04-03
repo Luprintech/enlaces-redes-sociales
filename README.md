@@ -1,26 +1,40 @@
 # Enlaces Redes Sociales
 
-Landing page tipo Linktree para redes sociales con mini CMS privado en `/redes`.
+Landing tipo Linktree para creadores y marcas, con CMS privado en `/redes`, tracking de clicks, presets visuales, uploads locales y despliegue self-hosted.
 
-Incluye:
+<p align="left">
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker" />
+</p>
 
-- landing publica con tema claro/oscuro
-- links sociales + links de contenido
-- CMS para editar perfil, links, estilos, fondos y presets
-- autenticacion admin con cambio de contraseña
+<p align="left">
+  <img src="https://skillicons.dev/icons?i=vite,react,ts,express,sqlite,tailwind,docker,github" alt="Tech stack icons" />
+</p>
+
+## Features
+
+- landing pública con tema claro/oscuro
+- enlaces sociales + enlaces de contenido
+- CMS privado en `/redes`
+- fondos, presets y personalización visual
 - tracking de clicks
-- uploads locales
+- CTA principal, prueba social y bloques destacados
+- uploads locales para avatar y fondos
+- auth admin con cambio de contraseña
 - SQLite persistente
-- despliegue listo para Docker
+- despliegue self-hosted con Docker
 
 ## Stack
 
-- Vite 7
-- React 19
-- TypeScript
-- Express 5
-- better-sqlite3
-- Tailwind CSS 4
+- Frontend: `React + Vite`
+- Backend: `Express + SQLite`
+- Estilos: `Tailwind CSS 4`
+- Runtime: `Node.js`
 
 ## Desarrollo local
 
@@ -30,9 +44,9 @@ Incluye:
 npm install
 ```
 
-2. Creá tu archivo `.env` a partir de `.env.example`.
+2. Creá tu archivo `.env` desde `.env.example`.
 
-3. Ejecutá el proyecto:
+3. Ejecutá el entorno de desarrollo:
 
 ```bash
 npm run dev
@@ -42,11 +56,11 @@ npm run dev
 
 - frontend: `http://localhost:5173`
 - panel: `http://localhost:5173/redes`
-- backend API: `http://localhost:4000`
+- backend: `http://localhost:4000`
 
 ## Variables de entorno
 
-Usá `.env.example` como plantilla y creá tu `.env` real para Docker/producción.
+Usá `.env.example` como base.
 
 Variables principales:
 
@@ -55,9 +69,9 @@ Variables principales:
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
-Importante:
+Notas:
 
-- `ADMIN_USERNAME` y `ADMIN_PASSWORD` se usan para crear el admin inicial si la tabla `users` está vacía.
+- `ADMIN_USERNAME` y `ADMIN_PASSWORD` solo se usan para crear el admin inicial si la tabla `users` está vacía.
 - después podés cambiar la contraseña desde el CMS.
 
 ## Scripts
@@ -70,7 +84,7 @@ npm run test
 npm run backup
 ```
 
-## Estructura importante
+## Estructura
 
 ```text
 src/
@@ -85,15 +99,7 @@ docker-compose.yml
 Dockerfile
 ```
 
-## Producción
-
-El proyecto ya está preparado para:
-
-- Docker multi-stage
-- frontend Vite servido por Express
-- persistencia de SQLite y uploads
-- backup manual
-- despliegue detrás de reverse proxy
+## Producción con Docker
 
 Antes de levantar el contenedor, creá estas carpetas en la raíz del proyecto:
 
@@ -121,23 +127,23 @@ Luego levantá el proyecto con:
 docker compose up -d --build
 ```
 
-El contenedor expone el puerto `4000`, así que en tu proxy tenés que apuntar a:
+El contenedor expone el puerto `4000`, así que tu proxy tiene que apuntar a:
 
 ```text
 http://<IP_DEL_SERVIDOR>:4000
 ```
 
-## Deploy automático con GitHub Actions
+## Deploy automático a Synology
 
-El repo incluye un workflow en:
+El repo incluye:
 
 ```text
 .github/workflows/deploy-synology.yml
 ```
 
-Se ejecuta al hacer push a `main` y despliega por SSH en tu Synology.
+Se ejecuta en cada push a `main` y despliega por SSH en tu Synology.
 
-Tenés que crear estos **GitHub Secrets** en el repositorio:
+Secrets necesarios en GitHub:
 
 - `SYNOLOGY_SSH_HOST`
 - `SYNOLOGY_SSH_PORT`
@@ -145,23 +151,19 @@ Tenés que crear estos **GitHub Secrets** en el repositorio:
 - `SYNOLOGY_SSH_KEY`
 - `SYNOLOGY_PROJECT_DIR`
 
-Ejemplo de `SYNOLOGY_PROJECT_DIR`:
+Ejemplo:
 
 ```text
-/volume1/docker/Proyectos-web/enlaces-redes-sociales
+SYNOLOGY_PROJECT_DIR=/volume1/docker/Proyectos-web/enlaces-redes-sociales
 ```
 
-Importante:
+Si esos secrets no están configurados, el workflow ahora **omite el deploy sin fallar**.
 
-- el Synology debe tener acceso por SSH
-- la clave privada debe estar en `SYNOLOGY_SSH_KEY`
-- el repo en el Synology debe existir y ser un clon git válido
-
-## Seguridad ya incluida
+## Seguridad
 
 - rate limiting en login y cambio de contraseña
 - validación de URLs
-- validación de uploads por tamaño y firma real de archivo
+- validación de uploads por tamaño y firma real
 - tests mínimos de utilidades críticas
 
 ## Backup
@@ -170,10 +172,10 @@ Importante:
 npm run backup
 ```
 
-En Docker, los backups quedan persistidos en el volumen montado para `/app/backups`.
+En Docker, los backups quedan persistidos en `/app/backups`.
 
 ## Notas
 
 - la ruta del panel no se muestra en la landing pública
-- los datos quedan en `data/app.db`
-- las imágenes subidas quedan en `public/uploads`
+- los datos viven en `data/app.db`
+- las imágenes subidas viven en `public/uploads`

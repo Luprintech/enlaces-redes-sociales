@@ -9,9 +9,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SYNOLOGY_SSH_HOST: ${{ secrets.SYNOLOGY_SSH_HOST }}
+      SYNOLOGY_SSH_PORT: ${{ secrets.SYNOLOGY_SSH_PORT }}
+      SYNOLOGY_SSH_USER: ${{ secrets.SYNOLOGY_SSH_USER }}
+      SYNOLOGY_SSH_KEY: ${{ secrets.SYNOLOGY_SSH_KEY }}
+      SYNOLOGY_PROJECT_DIR: ${{ secrets.SYNOLOGY_PROJECT_DIR }}
 
     steps:
+      - name: Skip deploy if secrets are missing
+        if: env.SYNOLOGY_SSH_HOST == '' || env.SYNOLOGY_SSH_PORT == '' || env.SYNOLOGY_SSH_USER == '' || env.SYNOLOGY_SSH_KEY == '' || env.SYNOLOGY_PROJECT_DIR == ''
+        run: |
+          echo "Synology deploy secrets are not configured yet. Skipping deploy."
+
       - name: Deploy over SSH
+        if: env.SYNOLOGY_SSH_HOST != '' && env.SYNOLOGY_SSH_PORT != '' && env.SYNOLOGY_SSH_USER != '' && env.SYNOLOGY_SSH_KEY != '' && env.SYNOLOGY_PROJECT_DIR != ''
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SYNOLOGY_SSH_HOST }}
