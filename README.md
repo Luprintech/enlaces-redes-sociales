@@ -45,7 +45,7 @@ npm run dev
 
 ## Variables de entorno
 
-Usá `.env.example` para desarrollo local y `.env.docker.example` para despliegue Docker.
+Usá `.env.example` como plantilla y creá tu `.env` real para Docker/producción.
 
 Variables principales:
 

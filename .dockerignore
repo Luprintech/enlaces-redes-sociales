@@ -11,4 +11,4 @@ docker-compose*.yml
 .env
 .env.local
 .env.*
-!.env.docker.example
+!.env.example
