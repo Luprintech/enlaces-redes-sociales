@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { signOut } from 'next-auth/react';
-import Image from 'next/image';
 import { SocialIcon } from '@/components/LandingClient';
 
 interface Profile {
@@ -56,6 +54,7 @@ interface LinkItem {
 interface Props {
   profile: Profile;
   links: LinkItem[];
+  onSignedOut?: () => void;
 }
 
 interface ThemePreset {
@@ -339,7 +338,7 @@ function SocialCard({
 }
 
 // ── Main CmsPanel ──────────────────────────────────────────────────────────
-export default function CmsPanel({ profile: initialProfile, links: initialLinks }: Props) {
+export default function CmsPanel({ profile: initialProfile, links: initialLinks, onSignedOut }: Props) {
   const [profile, setProfile] = useState(initialProfile);
   const [links, setLinks] = useState<LinkItem[]>(
     initialLinks.map((l) => ({
@@ -390,6 +389,11 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks 
   function showMessage(msg: string) {
     setMessage(msg);
     setTimeout(() => setMessage(''), 3000);
+  }
+
+  async function handleSignOut() {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    onSignedOut?.();
   }
 
   // ── Profile ──────────────────────────────────────────────────────────────
@@ -685,7 +689,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks 
           <a href="/" target="_blank" className="text-sm text-gray-400 hover:text-white transition-colors">
             Ver sitio →
           </a>
-          <button onClick={() => signOut({ callbackUrl: '/redes' })} className="text-sm text-gray-400 hover:text-red-400 transition-colors">
+          <button onClick={handleSignOut} className="text-sm text-gray-400 hover:text-red-400 transition-colors">
             Salir
           </button>
         </div>
@@ -724,7 +728,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks 
             <div className="flex items-center gap-4">
               {profile.image_url ? (
                 <div className="relative w-20 h-20 rounded-full overflow-hidden" style={{ border: '3px solid #EC4899' }}>
-                  <Image src={profile.image_url} alt="perfil" fill className="object-cover" unoptimized />
+                  <img src={profile.image_url} alt="perfil" className="object-cover w-full h-full" />
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: grad }}>👤</div>
@@ -1150,7 +1154,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks 
               <input ref={backgroundInputRef} type="file" accept="image/*" className="hidden" onChange={handleBackgroundUpload} />
               {profile.background_image_url && (
                 <div className="relative h-28 w-full overflow-hidden rounded-2xl" style={{ border: `1px solid ${borderColor}` }}>
-                  <Image src={profile.background_image_url} alt="fondo" fill className="object-cover" unoptimized />
+                  <img src={profile.background_image_url} alt="fondo" className="object-cover w-full h-full" />
                 </div>
               )}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1196,14 +1200,14 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks 
             <div className="relative overflow-hidden rounded-3xl p-5 flex flex-col items-center gap-4" style={{ background: profile.background_gradient_style === 'radial' ? 'radial-gradient(circle at 20% 20%, #2a0038 0%, #0d0d2e 45%, #001030 100%)' : profile.background_gradient_style === 'vivid' ? 'linear-gradient(135deg, #30003b 0%, #151b5f 50%, #003c8f 100%)' : 'linear-gradient(135deg, #1a0020 0%, #0d0d2e 50%, #001030 100%)', border: `1px solid ${borderColor}` }}>
               {profile.background_image_url && (
                 <div className="absolute inset-0">
-                  <Image src={profile.background_image_url} alt="background preview" fill className="object-cover" unoptimized style={{ opacity: profile.background_image_opacity }} />
+                  <img src={profile.background_image_url} alt="background preview" className="object-cover w-full h-full" style={{ opacity: profile.background_image_opacity }} />
                 </div>
               )}
               <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 30% 20%, ${profile.primary_color}2A 0%, transparent 55%), radial-gradient(ellipse at 75% 80%, ${profile.secondary_color}22 0%, transparent 55%)`, opacity: profile.background_gradient_opacity }} />
               <div className="relative z-10 w-full flex flex-col items-center gap-4">
               {profile.image_url ? (
                 <div className="relative w-20 h-20 rounded-full overflow-hidden" style={{ border: `3px solid ${profile.primary_color}` }}>
-                  <Image src={profile.image_url} alt="preview" fill className="object-cover" unoptimized />
+                  <img src={profile.image_url} alt="preview" className="object-cover w-full h-full" />
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: `linear-gradient(135deg, ${profile.primary_color}, ${profile.secondary_color})` }}>

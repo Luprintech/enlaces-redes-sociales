@@ -1,9 +1,12 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 
-export default function LoginForm() {
+interface Props {
+  onSuccess?: () => void;
+}
+
+export default function LoginForm({ onSuccess }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,18 +17,19 @@ export default function LoginForm() {
     setLoading(true);
     setError('');
 
-    const result = await signIn('credentials', {
-      username,
-      password,
-      redirect: false,
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username, password }),
     });
 
     setLoading(false);
 
-    if (result?.error) {
+    if (!response.ok) {
       setError('Usuario o contraseña incorrectos');
     } else {
-      window.location.reload();
+      onSuccess?.();
     }
   }
 

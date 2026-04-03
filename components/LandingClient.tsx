@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
-import Script from 'next/script';
 import StarField from './StarField';
 import ThemeToggle from './ThemeToggle';
 import { useTheme } from './ThemeProvider';
@@ -128,6 +126,45 @@ export default function LandingClient({ profile, socials, links }: Props) {
   const regularLinks = featuredLink ? links.filter((link) => link.id !== featuredLink.id) : links;
   const groupedLinks = groupByCategory(regularLinks);
 
+  React.useEffect(() => {
+    if (!profile.ga_measurement_id) return;
+
+    const existing = document.querySelector('script[data-ga-script="true"]');
+    if (existing) return;
+
+    const src = document.createElement('script');
+    src.async = true;
+    src.src = `https://www.googletagmanager.com/gtag/js?id=${profile.ga_measurement_id}`;
+    src.dataset.gaScript = 'true';
+    document.head.appendChild(src);
+
+    const inline = document.createElement('script');
+    inline.dataset.gaInline = 'true';
+    inline.text = `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${profile.ga_measurement_id}');`;
+    document.head.appendChild(inline);
+
+    return () => {
+      src.remove();
+      inline.remove();
+    };
+  }, [profile.ga_measurement_id]);
+
+  React.useEffect(() => {
+    if (!profile.meta_pixel_id) return;
+
+    const existing = document.querySelector('script[data-meta-pixel="true"]');
+    if (existing) return;
+
+    const script = document.createElement('script');
+    script.dataset.metaPixel = 'true';
+    script.text = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '${profile.meta_pixel_id}'); fbq('track', 'PageView');`;
+    document.head.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [profile.meta_pixel_id]);
+
   const darkGradient =
     profile.background_gradient_style === 'radial'
       ? 'radial-gradient(circle at 20% 20%, #2a0038 0%, #0d0d2e 45%, #001030 100%)'
@@ -144,29 +181,6 @@ export default function LandingClient({ profile, socials, links }: Props) {
 
   return (
     <>
-      {profile.ga_measurement_id && (
-        <>
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${profile.ga_measurement_id}`} strategy="afterInteractive" />
-          <Script id="ga-script" strategy="afterInteractive">{`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${profile.ga_measurement_id}');
-          `}</Script>
-        </>
-      )}
-      {profile.meta_pixel_id && (
-        <Script id="meta-pixel" strategy="afterInteractive">{`
-          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${profile.meta_pixel_id}');
-          fbq('track', 'PageView');
-        `}</Script>
-      )}
-
       <StarField palette={isDark ? ['255, 255, 255'] : ['236, 72, 153', '147, 51, 234', '37, 99, 235', '251, 146, 60']} count={isDark ? 120 : 110} />
 
       <div className="fixed inset-0 transition-all duration-500" style={{ background: isDark ? darkGradient : lightGradient, zIndex: -2 }} />
@@ -194,7 +208,7 @@ export default function LandingClient({ profile, socials, links }: Props) {
         <div className="w-full max-w-md flex flex-col items-center gap-6">
           {profile.image_url ? (
             <div className="relative w-28 h-28 rounded-full overflow-hidden" style={{ border: `3px solid ${primaryColor}`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}>
-              <Image src={profile.image_url} alt={profile.name} fill className="object-cover" unoptimized />
+              <img src={profile.image_url} alt={profile.name} className="object-cover w-full h-full" />
             </div>
           ) : (
             <div className="w-28 h-28 rounded-full flex items-center justify-center text-5xl" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}>👤</div>
@@ -231,7 +245,7 @@ export default function LandingClient({ profile, socials, links }: Props) {
           {featuredLink && (
             <a href={`/out/${featuredLink.id}`} target="_blank" rel="noopener noreferrer" className="group relative w-full overflow-hidden rounded-3xl transition-transform hover:scale-[1.01]" style={{ backgroundColor: isDark ? cardColor : '#fff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,10,46,0.08)'}`, color: textPrimary, boxShadow: isDark ? 'none' : '0 8px 24px rgba(0,0,0,0.08)' }}>
               <div className="absolute inset-y-0 left-0 w-1" style={{ background: `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` }} />
-              {featuredLink.thumbnail_url && <div className="relative h-40 w-full"><Image src={featuredLink.thumbnail_url} alt={featuredLink.title} fill className="object-cover" unoptimized /></div>}
+              {featuredLink.thumbnail_url && <div className="relative h-40 w-full"><img src={featuredLink.thumbnail_url} alt={featuredLink.title} className="object-cover w-full h-full" /></div>}
               <div className="p-5 flex items-start gap-3">
                 <div className="mt-1" style={{ color: primaryColor }}><SocialIcon name={featuredLink.icon} size={18} /></div>
                 <div className="flex-1">
@@ -258,7 +272,7 @@ export default function LandingClient({ profile, socials, links }: Props) {
                 <a key={link.id} href={`/out/${link.id}`} target="_blank" rel="noopener noreferrer" className="group relative w-full rounded-2xl transition-all duration-200 hover:scale-[1.02]" style={{ backgroundColor: isDark ? cardColor : '#fff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,10,46,0.08)'}`, color: textPrimary, boxShadow: isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.06)' }}>
                   <div className="absolute inset-y-0 left-0 w-1 rounded-l-2xl" style={{ background: `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` }} />
                   <div className="flex items-stretch gap-4 p-4">
-                    {link.thumbnail_url ? <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl"><Image src={link.thumbnail_url} alt={link.title} fill className="object-cover" unoptimized /></div> : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl" style={{ background: `${primaryColor}14`, color: primaryColor }}><SocialIcon name={link.icon} size={18} /></div>}
+                    {link.thumbnail_url ? <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl"><img src={link.thumbnail_url} alt={link.title} className="object-cover w-full h-full" /></div> : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl" style={{ background: `${primaryColor}14`, color: primaryColor }}><SocialIcon name={link.icon} size={18} /></div>}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">{link.title}</p>

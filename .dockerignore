@@ -1,12 +1,12 @@
 .git
-.next
+dist
+dist-server
 node_modules
 backups
 docker-data
 data
 public/uploads
 npm-debug.log*
-Dockerfile*
 docker-compose*.yml
 .env
 .env.local

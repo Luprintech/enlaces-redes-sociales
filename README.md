@@ -15,10 +15,10 @@ Incluye:
 
 ## Stack
 
-- Next.js 16
+- Vite 7
 - React 19
 - TypeScript
-- NextAuth v5 beta
+- Express 5
 - better-sqlite3
 - Tailwind CSS 4
 
@@ -30,7 +30,7 @@ Incluye:
 npm install
 ```
 
-2. Creá tu archivo `.env.local` a partir de `.env.example`.
+2. Creá tu archivo `.env` a partir de `.env.example`.
 
 3. Ejecutá el proyecto:
 
@@ -40,8 +40,9 @@ npm run dev
 
 4. Abrí:
 
-- landing: `http://localhost:3000`
-- panel: `http://localhost:3000/redes`
+- frontend: `http://localhost:5173`
+- panel: `http://localhost:5173/redes`
+- backend API: `http://localhost:4000`
 
 ## Variables de entorno
 
@@ -49,9 +50,8 @@ Usá `.env.example` como plantilla y creá tu `.env` real para Docker/producció
 
 Variables principales:
 
-- `NEXTAUTH_URL`
-- `NEXTAUTH_SECRET`
-- `AUTH_TRUST_HOST`
+- `PORT`
+- `SESSION_SECRET`
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
@@ -73,12 +73,11 @@ npm run backup
 ## Estructura importante
 
 ```text
-app/
-  page.tsx
-  redes/
-  api/
-  out/[id]/route.ts
+src/
+  pages/
+server/
 components/
+app/redes/
 lib/
 scripts/
 tests/
@@ -91,7 +90,7 @@ Dockerfile
 El proyecto ya está preparado para:
 
 - Docker multi-stage
-- salida `standalone` de Next.js
+- frontend Vite servido por Express
 - persistencia de SQLite y uploads
 - backup manual
 - despliegue detrás de reverse proxy
