@@ -11,7 +11,7 @@ Incluye:
 - tracking de clicks
 - uploads locales
 - SQLite persistente
-- despliegue listo para Docker y Synology
+- despliegue listo para Docker
 
 ## Stack
 
@@ -84,7 +84,6 @@ scripts/
 tests/
 docker-compose.yml
 Dockerfile
-DEPLOY-SYNOLOGY.md
 ```
 
 ## Producción
@@ -97,9 +96,31 @@ El proyecto ya está preparado para:
 - backup manual
 - despliegue detrás de reverse proxy
 
-Para Synology, seguí:
+Antes de levantar el contenedor, creá estas carpetas en la raíz del proyecto:
 
-- `DEPLOY-SYNOLOGY.md`
+```bash
+mkdir -p docker-data/data docker-data/uploads docker-data/backups
+```
+
+En Windows o Synology File Station, asegurate de que existan exactamente estas rutas:
+
+```text
+docker-data/data
+docker-data/uploads
+docker-data/backups
+```
+
+Esas carpetas son obligatorias porque `docker-compose.yml` monta:
+
+- `./docker-data/data:/app/data`
+- `./docker-data/uploads:/app/public/uploads`
+- `./docker-data/backups:/app/backups`
+
+Luego levantá el proyecto con:
+
+```bash
+docker compose up -d --build
+```
 
 ## Seguridad ya incluida
 
@@ -114,7 +135,7 @@ Para Synology, seguí:
 npm run backup
 ```
 
-En Docker/Synology, los backups quedan persistidos en el volumen montado para `/app/backups`.
+En Docker, los backups quedan persistidos en el volumen montado para `/app/backups`.
 
 ## Notas
 
