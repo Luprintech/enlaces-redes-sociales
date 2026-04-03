@@ -27,6 +27,10 @@
 # misc
 .DS_Store
 *.pem
+actualizar-git.sh
+AGENTS.md
+CLAUDE.md
+DEPLOY-SYNOLOGY.md
 
 # debug
 npm-debug.log*
