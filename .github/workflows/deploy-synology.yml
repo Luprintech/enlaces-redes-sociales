@@ -1,0 +1,70 @@
+name: Deploy to Synology
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SYNOLOGY_SSH_HOST }}
+          username: ${{ secrets.SYNOLOGY_SSH_USER }}
+          key: ${{ secrets.SYNOLOGY_SSH_KEY }}
+          port: ${{ secrets.SYNOLOGY_SSH_PORT }}
+          script: |
+            set -euo pipefail
+
+            PROJECT_DIR="${{ secrets.SYNOLOGY_PROJECT_DIR }}"
+            BRANCH="main"
+
+            echo "========================================"
+            echo "Conectado al Synology"
+            echo "Proyecto: $PROJECT_DIR"
+            echo "========================================"
+
+            cd "$PROJECT_DIR"
+
+            if [ ! -d ".git" ]; then
+              echo "No es un repositorio git"
+              exit 1
+            fi
+
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "El repositorio remoto tiene cambios locales sin commitear"
+              git status --short
+              exit 1
+            fi
+
+            echo "Commit actual local:"
+            git rev-parse --short HEAD
+
+            git fetch origin "$BRANCH"
+
+            LOCAL_COMMIT="$(git rev-parse HEAD)"
+            REMOTE_COMMIT="$(git rev-parse origin/$BRANCH)"
+
+            echo "Commit remoto:"
+            git rev-parse --short origin/$BRANCH
+
+            if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+              git pull --ff-only origin "$BRANCH"
+            else
+              echo "Ya está actualizado"
+            fi
+
+            mkdir -p docker-data/data docker-data/uploads docker-data/backups
+
+            docker compose up -d --build --force-recreate --remove-orphans
+            docker image prune -f
+
+            echo "Commit desplegado:"
+            git rev-parse --short HEAD
+
+            docker compose ps

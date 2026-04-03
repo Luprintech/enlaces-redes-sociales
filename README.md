@@ -128,6 +128,36 @@ El contenedor expone el puerto `4000`, así que en tu proxy tenés que apuntar a
 http://<IP_DEL_SERVIDOR>:4000
 ```
 
+## Deploy automático con GitHub Actions
+
+El repo incluye un workflow en:
+
+```text
+.github/workflows/deploy-synology.yml
+```
+
+Se ejecuta al hacer push a `main` y despliega por SSH en tu Synology.
+
+Tenés que crear estos **GitHub Secrets** en el repositorio:
+
+- `SYNOLOGY_SSH_HOST`
+- `SYNOLOGY_SSH_PORT`
+- `SYNOLOGY_SSH_USER`
+- `SYNOLOGY_SSH_KEY`
+- `SYNOLOGY_PROJECT_DIR`
+
+Ejemplo de `SYNOLOGY_PROJECT_DIR`:
+
+```text
+/volume1/docker/Proyectos-web/enlaces-redes-sociales
+```
+
+Importante:
+
+- el Synology debe tener acceso por SSH
+- la clave privada debe estar en `SYNOLOGY_SSH_KEY`
+- el repo en el Synology debe existir y ser un clon git válido
+
 ## Seguridad ya incluida
 
 - rate limiting en login y cambio de contraseña
