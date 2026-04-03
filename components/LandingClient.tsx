@@ -207,11 +207,24 @@ export default function LandingClient({ profile, socials, links }: Props) {
       <main className="relative z-10 min-h-screen flex flex-col items-center justify-start py-14 px-4">
         <div className="w-full max-w-md flex flex-col items-center gap-6">
           {profile.image_url ? (
-            <div className="relative w-28 h-28 rounded-full overflow-hidden" style={{ border: `3px solid ${primaryColor}`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}>
-              <img src={profile.image_url} alt={profile.name} className="object-cover w-full h-full" />
+            <div className="group relative w-28 h-28 rounded-full overflow-hidden" style={{ border: `3px solid ${primaryColor}`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}>
+              <img
+                src={profile.image_url}
+                alt={profile.name}
+                className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
+              />
+              <div
+                className="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                style={{ background: `linear-gradient(135deg, ${primaryColor}22, transparent 55%, ${secondaryColor}22)` }}
+              />
             </div>
           ) : (
-            <div className="w-28 h-28 rounded-full flex items-center justify-center text-5xl" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}>👤</div>
+            <div
+              className="group w-28 h-28 rounded-full flex items-center justify-center text-5xl transition-transform duration-500 hover:scale-110 hover:-rotate-6"
+              style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: `0 0 ${isDark ? 32 : 20}px ${primaryColor}${isDark ? '55' : '33'}` }}
+            >
+              <span className="transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">👤</span>
+            </div>
           )}
 
           <div className="flex flex-col items-center gap-2">

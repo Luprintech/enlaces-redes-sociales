@@ -125,6 +125,7 @@ function SegmentControl({
 function SocialCard({
   item,
   onUpdate,
+  onSave,
   onDelete,
   onDragStart,
   onDragOver,
@@ -133,6 +134,7 @@ function SocialCard({
 }: {
   item: LinkItem;
   onUpdate: (item: LinkItem) => void;
+  onSave: (item: LinkItem) => void;
   onDelete: (id: number) => void;
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -331,6 +333,16 @@ function SocialCard({
               style={inputStyle}
             />
           </Field>
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => onSave(item)}
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90"
+              style={{ background: grad }}
+            >
+              Guardar cambios
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -367,11 +379,14 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
 
   const [newSocial, setNewSocial] = useState({ title: 'Instagram', url: '', icon: 'instagram' });
   const [addingSocial, setAddingSocial] = useState(false);
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'youtube' });
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'youtube', thumbnail_url: '' });
   const [addingLink, setAddingLink] = useState(false);
+  const [uploadingLinkImageId, setUploadingLinkImageId] = useState<number | 'new' | null>(null);
   const [themePresets, setThemePresets] = useState<ThemePreset[]>([]);
   const [presetName, setPresetName] = useState('');
   const [savingPreset, setSavingPreset] = useState(false);
+  const [dirtyLinks, setDirtyLinks] = useState<Record<number, boolean>>({});
+  const [expandedLinks, setExpandedLinks] = useState<Record<number, boolean>>({});
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -389,6 +404,10 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
   function showMessage(msg: string) {
     setMessage(msg);
     setTimeout(() => setMessage(''), 3000);
+  }
+
+  function toggleExpandedLink(id: number) {
+    setExpandedLinks((items) => ({ ...items, [id]: !items[id] }));
   }
 
   async function handleSignOut() {
@@ -490,7 +509,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
   }
 
   // ── Links CRUD ───────────────────────────────────────────────────────────
-  async function addItem(type: 'social' | 'link', data: { title: string; url: string; icon: string }) {
+  async function addItem(type: 'social' | 'link', data: { title: string; url: string; icon: string; thumbnail_url?: string }) {
     if (!data.url) return;
     if (type === 'social') setAddingSocial(true);
     else setAddingLink(true);
@@ -514,7 +533,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
           },
         ]);
         if (type === 'social') setNewSocial({ title: 'Instagram', url: '', icon: 'instagram' });
-        else setNewLink({ title: '', url: '', icon: 'youtube' });
+        else setNewLink({ title: '', url: '', icon: 'youtube', thumbnail_url: '' });
         showMessage(type === 'social' ? 'Red social agregada' : 'Link agregado');
       }
     } catch { showMessage('Error de conexión'); }
@@ -535,6 +554,42 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
   function updateLinkLocal(item: LinkItem) {
     setLinks((l) => l.map((ll) => (ll.id === item.id ? item : ll)));
     persistLink(item);
+  }
+
+  function updateLinkDraft(id: number, patch: Partial<LinkItem>) {
+    setLinks((items) => items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+    setDirtyLinks((items) => ({ ...items, [id]: true }));
+  }
+
+  async function saveLink(id: number) {
+    const item = links.find((link) => link.id === id);
+    if (!item) return;
+    await persistLink(item);
+    setDirtyLinks((items) => ({ ...items, [id]: false }));
+    showMessage('Link guardado');
+  }
+
+  async function uploadLinkImage(target: number | 'new', file: File) {
+    setUploadingLinkImageId(target);
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      if (!res.ok) {
+        showMessage('Error subiendo imagen');
+        return;
+      }
+      const { url } = await res.json();
+      if (target === 'new') {
+        setNewLink((item) => ({ ...item, thumbnail_url: url }));
+      } else {
+        updateLinkDraft(target, { thumbnail_url: url });
+      }
+      showMessage('Imagen subida');
+    } catch {
+      showMessage('Error de conexión');
+    }
+    setUploadingLinkImageId(null);
   }
 
   async function deleteItem(id: number) {
@@ -832,7 +887,8 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
               <SocialCard
                 key={social.id}
                 item={social}
-                onUpdate={updateLinkLocal}
+                onUpdate={(item) => updateLinkDraft(item.id, item)}
+                onSave={(item) => void saveLink(item.id)}
                 onDelete={deleteItem}
                 onDragStart={() => handleDragStart(idx, social.id)}
                 onDragOver={(e) => handleDragOverByType(e, idx, 'social')}
@@ -905,10 +961,22 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
                   <div className="flex items-center gap-2 max-w-[60%]">
                     <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 16 }}>⠿</span>
                     <span className="text-white font-medium text-sm truncate">{link.title}</span>
+                    {dirtyLinks[link.id] && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(251,191,36,0.12)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.25)' }}>
+                        Sin guardar
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => updateLinkLocal({ ...link, is_featured: link.is_featured ? 0 : 1 })}
+                      onClick={() => toggleExpandedLink(link.id)}
+                      className="text-xs px-2 py-1 rounded-lg"
+                      style={{ color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.04)' }}
+                    >
+                      {expandedLinks[link.id] ? '▲' : '▼'}
+                    </button>
+                    <button
+                      onClick={() => updateLinkDraft(link.id, { is_featured: link.is_featured ? 0 : 1 })}
                       className="text-xs px-2 py-1 rounded-lg"
                       style={{
                         backgroundColor: link.is_featured ? '#2563EB22' : 'rgba(255,255,255,0.05)',
@@ -919,7 +987,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
                       {link.is_featured ? 'Destacado' : 'Normal'}
                     </button>
                     <button
-                      onClick={() => updateLinkLocal({ ...link, is_active: link.is_active ? 0 : 1 })}
+                      onClick={() => updateLinkDraft(link.id, { is_active: link.is_active ? 0 : 1 })}
                       className="text-xs px-2 py-1 rounded-lg"
                       style={{
                         backgroundColor: link.is_active ? '#EC489922' : 'rgba(255,255,255,0.05)',
@@ -932,102 +1000,135 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
                     <button onClick={() => deleteItem(link.id)} className="text-red-400 hover:text-red-300 text-sm">✕</button>
                   </div>
                 </div>
-                <input
-                  type="text"
-                  value={link.title}
-                  onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, title: e.target.value } : ll))}
-                  onBlur={() => persistLink(link)}
-                  placeholder="Título"
-                  style={inputStyle}
-                />
-                <textarea
-                  value={link.description}
-                  onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, description: e.target.value } : ll))}
-                  onBlur={() => persistLink(link)}
-                  placeholder="Descripción breve"
-                  rows={2}
-                  style={{ ...inputStyle, resize: 'none' }}
-                />
-                <input
-                  type="url"
-                  value={link.url}
-                  onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, url: e.target.value } : ll))}
-                  onBlur={() => persistLink(link)}
-                  placeholder="https://..."
-                  style={inputStyle}
-                />
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Field label="Categoría">
+                {expandedLinks[link.id] && (
+                  <>
                     <input
                       type="text"
-                      value={link.category}
-                      onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, category: e.target.value } : ll))}
-                      onBlur={() => persistLink(link)}
-                      placeholder="Contenido, Servicios, Recursos..."
+                      value={link.title}
+                      onChange={(e) => updateLinkDraft(link.id, { title: e.target.value })}
+                      placeholder="Título"
                       style={inputStyle}
                     />
-                  </Field>
-                  <Field label="Thumbnail URL">
+                    <textarea
+                      value={link.description}
+                      onChange={(e) => updateLinkDraft(link.id, { description: e.target.value })}
+                      placeholder="Descripción breve"
+                      rows={2}
+                      style={{ ...inputStyle, resize: 'none' }}
+                    />
                     <input
                       type="url"
-                      value={link.thumbnail_url}
-                      onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, thumbnail_url: e.target.value } : ll))}
-                      onBlur={() => persistLink(link)}
+                      value={link.url}
+                      onChange={(e) => updateLinkDraft(link.id, { url: e.target.value })}
                       placeholder="https://..."
                       style={inputStyle}
                     />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <Field label="Badge">
-                    <input
-                      type="text"
-                      value={link.badge}
-                      onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, badge: e.target.value.slice(0, 6) } : ll))}
-                      onBlur={() => persistLink(link)}
-                      placeholder="NEW"
-                      style={inputStyle}
-                    />
-                  </Field>
-                  <Field label="Inicio">
-                    <input
-                      type="datetime-local"
-                      value={link.start_at}
-                      onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, start_at: e.target.value } : ll))}
-                      onBlur={() => persistLink(link)}
-                      style={inputStyle}
-                    />
-                  </Field>
-                  <Field label="Fin">
-                    <input
-                      type="datetime-local"
-                      value={link.end_at}
-                      onChange={(e) => setLinks((l) => l.map((ll) => ll.id === link.id ? { ...ll, end_at: e.target.value } : ll))}
-                      onBlur={() => persistLink(link)}
-                      style={inputStyle}
-                    />
-                  </Field>
-                </div>
-                <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
-                  Clicks registrados: {link.clicks}
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {LINK_ICONS.map((ico) => (
-                    <button
-                      key={ico}
-                      onClick={() => updateLinkLocal({ ...link, icon: ico })}
-                      className="flex flex-col items-center gap-1 py-2 rounded-xl transition-all"
-                      style={{
-                        background: link.icon === ico ? '#EC489922' : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${link.icon === ico ? '#EC4899' : 'rgba(255,255,255,0.06)'}`,
-                        color: link.icon === ico ? '#EC4899' : 'rgba(255,255,255,0.4)',
-                      }}
-                    >
-                      <SocialIcon name={ico} size={16} />
-                      <span style={{ fontSize: 9 }}>{ico}</span>
-                    </button>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Field label="Categoría">
+                        <input
+                          type="text"
+                          value={link.category}
+                          onChange={(e) => updateLinkDraft(link.id, { category: e.target.value })}
+                          placeholder="Contenido, Enlaces, Recursos..."
+                          style={inputStyle}
+                        />
+                      </Field>
+                      <Field label="Thumbnail URL">
+                        <input
+                          type="url"
+                          value={link.thumbnail_url}
+                          onChange={(e) => updateLinkDraft(link.id, { thumbnail_url: e.target.value })}
+                          placeholder="https://..."
+                          style={inputStyle}
+                        />
+                      </Field>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <label className="px-3 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer" style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${borderColor}` }}>
+                        {uploadingLinkImageId === link.id ? 'Subiendo...' : 'Subir imagen'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void uploadLinkImage(link.id, file);
+                            e.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+                      {link.thumbnail_url && (
+                        <button
+                          onClick={() => updateLinkDraft(link.id, { thumbnail_url: '' })}
+                          className="text-xs text-red-400 hover:text-red-300"
+                        >
+                          Quitar imagen
+                        </button>
+                      )}
+                    </div>
+                    {link.thumbnail_url && (
+                      <div className="relative h-28 w-full overflow-hidden rounded-2xl" style={{ border: `1px solid ${borderColor}` }}>
+                        <img src={link.thumbnail_url} alt={link.title} className="object-cover w-full h-full" />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Field label="Badge">
+                        <input
+                          type="text"
+                          value={link.badge}
+                          onChange={(e) => updateLinkDraft(link.id, { badge: e.target.value.slice(0, 6) })}
+                          placeholder="NEW"
+                          style={inputStyle}
+                        />
+                      </Field>
+                      <Field label="Inicio">
+                        <input
+                          type="datetime-local"
+                          value={link.start_at}
+                          onChange={(e) => updateLinkDraft(link.id, { start_at: e.target.value })}
+                          style={inputStyle}
+                        />
+                      </Field>
+                      <Field label="Fin">
+                        <input
+                          type="datetime-local"
+                          value={link.end_at}
+                          onChange={(e) => updateLinkDraft(link.id, { end_at: e.target.value })}
+                          style={inputStyle}
+                        />
+                      </Field>
+                    </div>
+                    <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                      Clicks registrados: {link.clicks}
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {LINK_ICONS.map((ico) => (
+                        <button
+                          key={ico}
+                          onClick={() => updateLinkDraft(link.id, { icon: ico })}
+                          className="flex flex-col items-center gap-1 py-2 rounded-xl transition-all"
+                          style={{
+                            background: link.icon === ico ? '#EC489922' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${link.icon === ico ? '#EC4899' : 'rgba(255,255,255,0.06)'}`,
+                            color: link.icon === ico ? '#EC4899' : 'rgba(255,255,255,0.4)',
+                          }}
+                        >
+                          <SocialIcon name={ico} size={16} />
+                          <span style={{ fontSize: 9 }}>{ico}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => void saveLink(link.id)}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90"
+                        style={{ background: grad }}
+                      >
+                        Guardar cambios
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
 
@@ -1036,6 +1137,32 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
               <h3 className="text-white font-medium text-sm">Agregar link</h3>
               <input type="text" value={newLink.title} onChange={(e) => setNewLink((n) => ({ ...n, title: e.target.value }))} placeholder="Título del link" style={inputStyle} />
               <input type="url" value={newLink.url} onChange={(e) => setNewLink((n) => ({ ...n, url: e.target.value }))} placeholder="https://..." style={inputStyle} />
+              <input type="url" value={newLink.thumbnail_url} onChange={(e) => setNewLink((n) => ({ ...n, thumbnail_url: e.target.value }))} placeholder="URL de imagen (opcional)" style={inputStyle} />
+              <div className="flex items-center gap-3">
+                <label className="px-3 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer" style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${borderColor}` }}>
+                  {uploadingLinkImageId === 'new' ? 'Subiendo...' : 'Subir imagen'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void uploadLinkImage('new', file);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                </label>
+                {newLink.thumbnail_url && (
+                  <button onClick={() => setNewLink((n) => ({ ...n, thumbnail_url: '' }))} className="text-xs text-red-400 hover:text-red-300">
+                    Quitar imagen
+                  </button>
+                )}
+              </div>
+              {newLink.thumbnail_url && (
+                <div className="relative h-28 w-full overflow-hidden rounded-2xl" style={{ border: `1px solid ${borderColor}` }}>
+                  <img src={newLink.thumbnail_url} alt="preview thumbnail" className="object-cover w-full h-full" />
+                </div>
+              )}
               <div className="grid grid-cols-4 gap-2">
                 {LINK_ICONS.map((ico) => (
                   <button

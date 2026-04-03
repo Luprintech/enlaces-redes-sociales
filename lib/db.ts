@@ -136,6 +136,8 @@ function initSchema(db: Database.Database) {
     if (!linkCols.includes(col)) db.exec(sql);
   }
 
+  db.prepare("UPDATE links SET category = 'Enlaces' WHERE category = 'Servicios'").run();
+
   const profile = db.prepare('SELECT id FROM profile WHERE id = 1').get();
   if (!profile) {
     db.prepare(`
@@ -171,7 +173,7 @@ function initSchema(db: Database.Database) {
       VALUES (?, ?, ?, ?, ?, 'link', ?, ?)
     `);
     ins.run('Mi ultimo video', 'https://youtube.com', 'El contenido mas reciente para arrancar rapido.', 'Contenido', 'youtube', 0, 1);
-    ins.run('Mi portfolio', 'https://example.com', 'Trabajos, servicios y casos reales.', 'Servicios', 'website', 1, 0);
+    ins.run('Mi portfolio', 'https://example.com', 'Trabajos, enlaces y casos reales.', 'Enlaces', 'website', 1, 0);
   }
 
   const usersCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number }).count;
