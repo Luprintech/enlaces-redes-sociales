@@ -1,7 +1,5 @@
 FROM node:22-bookworm-slim AS base
 
-ENV NODE_ENV=production
-
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -11,16 +9,17 @@ FROM deps AS builder
 WORKDIR /app
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 
 FROM base AS runner
 WORKDIR /app
 
+ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/dist-server ./dist-server
 COPY --from=builder /app/public ./public
