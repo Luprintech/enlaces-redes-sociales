@@ -379,7 +379,14 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
 
   const [newSocial, setNewSocial] = useState({ title: 'Instagram', url: '', icon: 'instagram' });
   const [addingSocial, setAddingSocial] = useState(false);
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'youtube', thumbnail_url: '' });
+  const [newLink, setNewLink] = useState({
+    title: '',
+    url: '',
+    icon: 'youtube',
+    thumbnail_url: '',
+    start_at: '',
+    end_at: '',
+  });
   const [addingLink, setAddingLink] = useState(false);
   const [uploadingLinkImageId, setUploadingLinkImageId] = useState<number | 'new' | null>(null);
   const [themePresets, setThemePresets] = useState<ThemePreset[]>([]);
@@ -509,7 +516,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
   }
 
   // ── Links CRUD ───────────────────────────────────────────────────────────
-  async function addItem(type: 'social' | 'link', data: { title: string; url: string; icon: string; thumbnail_url?: string }) {
+  async function addItem(type: 'social' | 'link', data: { title: string; url: string; icon: string; thumbnail_url?: string; start_at?: string; end_at?: string }) {
     if (!data.url) return;
     if (type === 'social') setAddingSocial(true);
     else setAddingLink(true);
@@ -533,7 +540,7 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
           },
         ]);
         if (type === 'social') setNewSocial({ title: 'Instagram', url: '', icon: 'instagram' });
-        else setNewLink({ title: '', url: '', icon: 'youtube', thumbnail_url: '' });
+        else setNewLink({ title: '', url: '', icon: 'youtube', thumbnail_url: '', start_at: '', end_at: '' });
         showMessage(type === 'social' ? 'Red social agregada' : 'Link agregado');
       }
     } catch { showMessage('Error de conexión'); }
@@ -1138,6 +1145,24 @@ export default function CmsPanel({ profile: initialProfile, links: initialLinks,
               <input type="text" value={newLink.title} onChange={(e) => setNewLink((n) => ({ ...n, title: e.target.value }))} placeholder="Título del link" style={inputStyle} />
               <input type="url" value={newLink.url} onChange={(e) => setNewLink((n) => ({ ...n, url: e.target.value }))} placeholder="https://..." style={inputStyle} />
               <input type="url" value={newLink.thumbnail_url} onChange={(e) => setNewLink((n) => ({ ...n, thumbnail_url: e.target.value }))} placeholder="URL de imagen (opcional)" style={inputStyle} />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Inicio">
+                  <input
+                    type="datetime-local"
+                    value={newLink.start_at}
+                    onChange={(e) => setNewLink((n) => ({ ...n, start_at: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </Field>
+                <Field label="Fin">
+                  <input
+                    type="datetime-local"
+                    value={newLink.end_at}
+                    onChange={(e) => setNewLink((n) => ({ ...n, end_at: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </Field>
+              </div>
               <div className="flex items-center gap-3">
                 <label className="px-3 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer" style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${borderColor}` }}>
                   {uploadingLinkImageId === 'new' ? 'Subiendo...' : 'Subir imagen'}
